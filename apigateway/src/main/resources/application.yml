@@ -1,0 +1,84 @@
+server:
+  port: 9090
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # Expose everything
+  endpoint:
+    gateway:
+      enabled: true  # Gateway actuator
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      routes:
+        - id: ORDER-SERVICE
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/orders/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: ORDER-SERVICE
+                fallbackuri: forward:/orderServiceFallBack
+        - id: PRODUCT-SERVICE
+          uri: lb://PRODUCT-SERVICE
+          predicates:
+            - Path=/product/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: PRODUCT-SERVICE
+                fallbackuri: forward:/productServiceFallBack
+  security:
+    oauth2:
+      client:
+        registration:
+          auth0:
+            client-id: NtlTEB2yEnT12qBeBhpONnQbeF1gPrA1
+            client-secret: FCElbvCAmjsnEmb4RIYiO3z90cmyJbDJ1hfr_uFw6wUEtDy5OCzADGNg5z_tkIK8
+            scope: openid, email, profile, offline_access, Customer, Admin
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:9090/login/oauth2/code/auth0"
+        provider:
+          auth0:
+            issuer-uri: https://dev-divisha2divyansh.us.auth0.com/
+            jwk-set-uri: https://dev-divisha2divyansh.us.auth0.com/.well-known/jwks.json
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-divisha2divyansh.us.auth0.com/
+
+auth0:
+  audience: https://dev-divisha2divyansh.us.auth0.com/api/v2/
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      order-service:
+        base-config: default
