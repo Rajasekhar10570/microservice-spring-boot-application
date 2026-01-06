@@ -55,8 +55,8 @@ spring:
       client:
         registration:
           auth0:
-            client-id: NtlTEB2yEnT12qBeBhpONnQbeF1gPrA1
-            client-secret: FCElbvCAmjsnEmb4RIYiO3z90cmyJbDJ1hfr_uFw6wUEtDy5OCzADGNg5z_tkIK8
+            client-id: ''
+            client-secret: ''
             scope: openid, email, profile, offline_access, Customer, Admin
             authorization-grant-type: authorization_code
             redirect-uri: "http://localhost:9090/login/oauth2/code/auth0"
